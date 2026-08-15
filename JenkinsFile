@@ -78,24 +78,36 @@ pipeline {
         }
       }
     }
+
     stage('Update Deployment File') {
         environment {
-            GIT_REPO_NAME = "cicdproject_deployment"
-            GIT_USER_NAME = "iamkavitha"
+            GIT_REPO_NAME = 'cicdproject_deployment'
+            GIT_USER_NAME = 'iamkavitha'
         }
+
         steps {
-            withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
+            withCredentials([
+                string(credentialsId: 'github', variable: 'GITHUB_TOKEN')
+            ]) {
                 sh '''
+                    rm -rf deployment-repo
+
+                    git clone https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME}.git deployment-repo
+
+                    cd deployment-repo
+
                     git config user.email "kaviranga9344@gmail.com"
                     git config user.name "Kavitha Mallesh"
-                    BUILD_NUMBER=${BUILD_NUMBER}
+
                     sed -i "s/replaceImageTag/${BUILD_NUMBER}/g" deployment.yml
+
                     git add deployment.yml
                     git commit -m "Update deployment image to version ${BUILD_NUMBER}"
-                    git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:main
+                    git push origin main
                 '''
             }
         }
     }
+    
   }
 }
