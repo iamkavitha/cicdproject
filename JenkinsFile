@@ -48,10 +48,20 @@ pipeline {
                 -Dsonar.login=$SONAR_AUTH_TOKEN \
                 -Dsonar.host.url=$SONAR_URL
           '''
-          
+
         }
       }
     }
+    stage('Install Docker CLI') {
+        steps {
+            sh '''
+                apt-get update
+                apt-get install -y docker.io
+                docker --version
+            '''
+        }
+    }
+
     stage('Build and Push Docker Image') {
       environment {
         DOCKER_IMAGE = "20223049/ultimate-cicd:${BUILD_NUMBER}"
