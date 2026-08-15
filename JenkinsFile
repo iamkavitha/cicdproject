@@ -6,6 +6,18 @@ pipeline {
     }
   }
   stages {
+  stage('Check Environment') {
+      steps {
+          sh '''
+              echo "===== ENVIRONMENT ====="
+              java -version
+              javac -version
+              mvn -version
+              docker --version
+          '''
+      }
+  }
+
     stage('Checkout') {
       steps {
         sh 'echo passed'
