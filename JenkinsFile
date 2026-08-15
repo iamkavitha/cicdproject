@@ -2,7 +2,7 @@ pipeline {
   agent {
     docker {
             image 'maven:3.9-eclipse-temurin-21'
-            args '-v /var/run/docker.sock:/var/run/docker.sock'
+            args '--user root -e HOME=/root -v /var/run/docker.sock:/var/run/docker.sock'
         }
 //     docker {
 //       image 'abhishekf5/maven-abhishek-docker-agent:v1'
@@ -14,10 +14,12 @@ pipeline {
       steps {
         sh '''
               echo "===== ENVIRONMENT ====="
-              java -version
-              javac -version
-              mvn -version
-              
+               echo "USER=$(whoami)"
+               echo "HOME=$HOME"
+               java -version
+               mvn -version
+               echo "Maven repository:"
+               mvn help:evaluate -Dexpression=settings.localRepository -q -DforceStdout
           '''
       }
   }
