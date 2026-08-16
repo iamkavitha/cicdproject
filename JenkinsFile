@@ -79,7 +79,20 @@ pipeline {
       }
     }
 
-    stage('Update Deployment File') {
+    stage('Install Helm') {
+                steps {
+                    sh '''
+                        apt-get update
+                        apt-get install -y curl
+
+                        curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+
+                        helm version
+                    '''
+                }
+            }
+
+    stage('Update Helm Image Tag') {
         environment {
             GIT_REPO_NAME = 'cicdproject_deployment'
             GIT_USER_NAME = 'iamkavitha'
@@ -99,10 +112,29 @@ pipeline {
                     git config user.email "kaviranga9344@gmail.com"
                     git config user.name "Kavitha Mallesh"
 
-                    sed -i "s/replaceImageTag/${BUILD_NUMBER}/g" deployment.yml
+                    echo "===== BEFORE UPDATE ====="
+                    cat helm/cicdproject/values.yaml
 
-                    git add deployment.yml
-                    git commit -m "Update deployment image to version ${BUILD_NUMBER}" || echo "Nothing to commit"
+                    echo "Updating image tag to ${BUILD_NUMBER}"
+
+                    sed -i "s/^  tag:.*/  tag: \\"${BUILD_NUMBER}\\"/" \
+                        helm/cicdproject/values.yaml
+
+                    echo "===== AFTER UPDATE ====="
+                    cat helm/cicdproject/values.yaml
+
+                    echo "===== HELM LINT ====="
+                    helm lint helm/cicdproject
+
+                    echo "===== HELM TEMPLATE ====="
+                    helm template cicdproject helm/cicdproject
+
+                    git add helm/cicdproject/values.yaml
+
+                    git commit \
+                        -m "Update image to version ${BUILD_NUMBER}" \
+                        || echo "Nothing to commit"
+
                     git push origin main
                 '''
             }
